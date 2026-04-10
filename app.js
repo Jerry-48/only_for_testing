@@ -398,27 +398,27 @@ const QUIZ_DATA = [
 
 // --- Seed Leaderboard ---
 const SEED_SCORES = [
-  { username: 'Sarah K.',   subject: 'Mathematics', score: 9, total: 10 },
-  { username: 'James L.',   subject: 'Science',     score: 10, total: 10 },
-  { username: 'Priya M.',   subject: 'History',     score: 8, total: 10 },
-  { username: 'Daniel O.',  subject: 'Mathematics', score: 7, total: 10 },
-  { username: 'Ling C.',    subject: 'Science',     score: 9, total: 10 },
-  { username: 'Sofia R.',   subject: 'History',     score: 10, total: 10 },
-  { username: 'Ethan B.',   subject: 'Mathematics', score: 8, total: 10 },
-  { username: 'Amara N.',   subject: 'Science',     score: 7, total: 10 },
-  { username: 'Lucas P.',   subject: 'History',     score: 6, total: 10 },
+  { username: 'Sarah K.', subject: 'Mathematics', score: 9, total: 10 },
+  { username: 'James L.', subject: 'Science', score: 10, total: 10 },
+  { username: 'Priya M.', subject: 'History', score: 8, total: 10 },
+  { username: 'Daniel O.', subject: 'Mathematics', score: 7, total: 10 },
+  { username: 'Ling C.', subject: 'Science', score: 9, total: 10 },
+  { username: 'Sofia R.', subject: 'History', score: 10, total: 10 },
+  { username: 'Ethan B.', subject: 'Mathematics', score: 8, total: 10 },
+  { username: 'Amara N.', subject: 'Science', score: 7, total: 10 },
+  { username: 'Lucas P.', subject: 'History', score: 6, total: 10 },
 ];
 
 /* ══════════════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════════════ */
-let currentUser      = null;
-let currentSection   = 'home';
-let currentQuiz      = null;
+let currentUser = null;
+let currentSection = 'home';
+let currentQuiz = null;
 let currentQuestionI = 0;
-let userAnswers      = [];
-let answeredCurrent  = false;
-let uploadedNotes    = [];
+let userAnswers = [];
+let answeredCurrent = false;
+let uploadedNotes = [];
 
 /* ══════════════════════════════════════════════════════
    AUTH
@@ -426,28 +426,34 @@ let uploadedNotes    = [];
 function handleLogin() {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
-  const errorEl  = document.getElementById('loginError');
+  const errorEl = document.getElementById('loginError');
 
-  if (!username) {
-    errorEl.textContent = 'Please enter a username.';
-    errorEl.classList.remove('hidden');
-    return;
-  }
-  if (password !== 'student123') {
-    errorEl.textContent = 'Incorrect password. Hint: student123';
+  if (!username || !password) {
+    errorEl.textContent = 'Please enter username & password';
     errorEl.classList.remove('hidden');
     return;
   }
 
-  errorEl.classList.add('hidden');
-  currentUser = username;
-  localStorage.setItem('iq_user', username);
+  // 🔥 Firebase Login Call (AA STEP 2 chhe)
+  firebaseLogin(username, password).then(success => {
 
-  document.getElementById('loginOverlay').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  document.getElementById('headerUsername').textContent = '👤 ' + username;
+    if (success) {
+      errorEl.classList.add('hidden');
 
-  initApp();
+      currentUser = username;
+      localStorage.setItem('iq_user', username);
+
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('headerUsername').textContent = '👤 ' + username;
+
+      initApp();
+    } else {
+      errorEl.textContent = 'Login failed (Firebase)';
+      errorEl.classList.remove('hidden');
+    }
+
+  });
 }
 
 function handleLogout() {
@@ -576,7 +582,7 @@ function viewNote(id) {
   const note = [...NOTES_DATA, ...uploadedNotes].find(n => n.id === id);
   if (!note) return;
   document.getElementById('modalTitle').textContent = note.title;
-  document.getElementById('modalBody').textContent  = note.content || '[No preview available for this file type]';
+  document.getElementById('modalBody').textContent = note.content || '[No preview available for this file type]';
   document.getElementById('noteModal').classList.remove('hidden');
 }
 
@@ -584,8 +590,8 @@ function downloadNote(id) {
   const note = [...NOTES_DATA, ...uploadedNotes].find(n => n.id === id);
   if (!note) return;
   const blob = new Blob([note.content || note.title], { type: 'text/plain' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
   a.download = note.title.replace(/\s+/g, '_') + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
@@ -620,7 +626,7 @@ function handleFileUpload(e) {
 
 function processFile(file) {
   const statusEl = document.getElementById('uploadStatus');
-  const maxSize  = 10 * 1024 * 1024;
+  const maxSize = 10 * 1024 * 1024;
 
   if (!['application/pdf', 'text/plain'].includes(file.type)) {
     showUploadStatus('Only PDF and TXT files are supported.', 'error');
@@ -634,14 +640,14 @@ function processFile(file) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     const newNote = {
-      id:          'u_' + Date.now(),
-      title:       file.name.replace(/\.[^.]+$/, ''),
-      subject:     'cs', // default category
-      type:        file.type === 'application/pdf' ? 'pdf' : 'txt',
-      pages:       (Math.round(file.size / 2000)) + ' est. pages',
-      date:        new Date().toLocaleDateString('en-US', { month:'short', year:'numeric' }),
-      tags:        ['uploaded', 'custom'],
-      content:     file.type === 'text/plain' ? ev.target.result : '[PDF Preview — download to view full content]',
+      id: 'u_' + Date.now(),
+      title: file.name.replace(/\.[^.]+$/, ''),
+      subject: 'cs', // default category
+      type: file.type === 'application/pdf' ? 'pdf' : 'txt',
+      pages: (Math.round(file.size / 2000)) + ' est. pages',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      tags: ['uploaded', 'custom'],
+      content: file.type === 'text/plain' ? ev.target.result : '[PDF Preview — download to view full content]',
       isUserUpload: true
     };
     uploadedNotes.unshift(newNote);
@@ -662,7 +668,7 @@ function processFile(file) {
 function showUploadStatus(msg, type) {
   const el = document.getElementById('uploadStatus');
   el.textContent = msg;
-  el.className   = `upload-status ${type}`;
+  el.className = `upload-status ${type}`;
   el.classList.remove('hidden');
   setTimeout(() => el.classList.add('hidden'), 4000);
 }
@@ -689,10 +695,10 @@ function renderQuizSubjects() {
 }
 
 function startQuiz(quizId) {
-  currentQuiz      = QUIZ_DATA.find(q => q.id === quizId);
+  currentQuiz = QUIZ_DATA.find(q => q.id === quizId);
   currentQuestionI = 0;
-  userAnswers      = [];
-  answeredCurrent  = false;
+  userAnswers = [];
+  answeredCurrent = false;
 
   document.getElementById('quizHome').classList.add('hidden');
   document.getElementById('quizResults').classList.add('hidden');
@@ -703,18 +709,18 @@ function startQuiz(quizId) {
 }
 
 function renderQuestion() {
-  const q   = currentQuiz.questions[currentQuestionI];
+  const q = currentQuiz.questions[currentQuestionI];
   const tot = currentQuiz.questions.length;
 
-  document.getElementById('questionNum').textContent  = `Question ${currentQuestionI + 1} of ${tot}`;
+  document.getElementById('questionNum').textContent = `Question ${currentQuestionI + 1} of ${tot}`;
   document.getElementById('questionText').textContent = q.q;
   document.getElementById('quizProgressLabel').textContent = `${currentQuestionI + 1} / ${tot}`;
-  document.getElementById('quizProgressFill').style.width  = `${((currentQuestionI) / tot) * 100}%`;
+  document.getElementById('quizProgressFill').style.width = `${((currentQuestionI) / tot) * 100}%`;
 
   const nextBtn = document.getElementById('nextBtn');
   nextBtn.textContent = currentQuestionI === tot - 1 ? 'Finish ✓' : 'Next →';
-  nextBtn.disabled    = true;
-  answeredCurrent     = false;
+  nextBtn.disabled = true;
+  answeredCurrent = false;
 
   const optsGrid = document.getElementById('optionsGrid');
   optsGrid.innerHTML = '';
@@ -732,7 +738,7 @@ function selectAnswer(optIdx) {
   if (answeredCurrent) return;
   answeredCurrent = true;
 
-  const q       = currentQuiz.questions[currentQuestionI];
+  const q = currentQuiz.questions[currentQuestionI];
   const correct = q.ans;
   userAnswers.push({ selected: optIdx, correct });
 
@@ -761,9 +767,9 @@ function showResults() {
   document.getElementById('quizPlayer').classList.add('hidden');
   document.getElementById('quizResults').classList.remove('hidden');
 
-  const score   = userAnswers.filter(a => a.selected === a.correct).length;
-  const total   = currentQuiz.questions.length;
-  const pct     = Math.round((score / total) * 100);
+  const score = userAnswers.filter(a => a.selected === a.correct).length;
+  const total = currentQuiz.questions.length;
+  const pct = Math.round((score / total) * 100);
 
   // Emoji + title
   let icon, title;
@@ -772,18 +778,18 @@ function showResults() {
   else if (pct >= 50) { icon = '📚'; title = 'Keep Studying!'; }
   else { icon = '💪'; title = 'Don\'t Give Up!'; }
 
-  document.getElementById('resultsIcon').textContent    = icon;
-  document.getElementById('resultsTitle').textContent   = title;
-  document.getElementById('scoreBig').textContent       = score;
-  document.getElementById('scoreDenom').textContent     = `/ ${total}`;
-  document.getElementById('scorePercent').textContent   = `${pct}% Correct`;
+  document.getElementById('resultsIcon').textContent = icon;
+  document.getElementById('resultsTitle').textContent = title;
+  document.getElementById('scoreBig').textContent = score;
+  document.getElementById('scoreDenom').textContent = `/ ${total}`;
+  document.getElementById('scorePercent').textContent = `${pct}% Correct`;
 
   // Breakdown
   const breakdown = document.getElementById('resultsBreakdown');
   breakdown.innerHTML = '';
   userAnswers.forEach((a, i) => {
-    const q    = currentQuiz.questions[i];
-    const ok   = a.selected === a.correct;
+    const q = currentQuiz.questions[i];
+    const ok = a.selected === a.correct;
     const item = document.createElement('div');
     item.className = `breakdown-item ${ok ? 'correct' : 'wrong'}`;
     item.innerHTML = `
@@ -792,8 +798,8 @@ function showResults() {
         <div class="breakdown-q">${q.q}</div>
         <div class="breakdown-a">
           ${ok
-            ? `Correct: ${q.opts[a.correct]}`
-            : `Your answer: ${q.opts[a.selected]} · Correct: ${q.opts[a.correct]}`}
+        ? `Correct: ${q.opts[a.correct]}`
+        : `Your answer: ${q.opts[a.selected]} · Correct: ${q.opts[a.correct]}`}
         </div>
       </div>
     `;
@@ -828,21 +834,27 @@ function seedLeaderboard() {
 
 function saveScore(score, total) {
   if (!currentUser) return;
+
+  // 🔥 Firebase ma save
+  saveScoreFirebase(currentQuiz.title, score, total);
+
+  // (Optional) local backup
   const scores = JSON.parse(localStorage.getItem('iq_scores') || '[]');
   scores.push({
     username: currentUser,
-    subject:  currentQuiz.title,
+    subject: currentQuiz.title,
     score,
     total,
-    date:     new Date().toLocaleDateString()
+    date: new Date().toLocaleDateString()
   });
   localStorage.setItem('iq_scores', JSON.stringify(scores));
 }
 
+
 function updateHomeScore() {
   if (!currentUser) return;
   const scores = JSON.parse(localStorage.getItem('iq_scores') || '[]');
-  const mine   = scores.filter(s => s.username === currentUser);
+  const mine = scores.filter(s => s.username === currentUser);
   if (mine.length === 0) {
     document.getElementById('homeUserScore').textContent = '—';
     return;
@@ -851,37 +863,33 @@ function updateHomeScore() {
   document.getElementById('homeUserScore').textContent = best + '%';
 }
 
-function renderLeaderboard(filter, btn) {
+async function renderLeaderboard(filter, btn) {
+
   if (btn) {
     document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
 
-  const scores = JSON.parse(localStorage.getItem('iq_scores') || '[]');
-  // Best score per username+subject
-  const bestMap = {};
-  scores.forEach(s => {
-    const key = s.username + '|' + s.subject;
-    if (!bestMap[key] || s.score > bestMap[key].score) bestMap[key] = s;
-  });
-  let entries = Object.values(bestMap);
+  let entries = await window.getLeaderboard(); // 🔥 Firebase data
+
   if (filter !== 'all') {
     entries = entries.filter(e => e.subject === filter);
   }
-  // Sort by percentage desc
-  entries.sort((a, b) => (b.score / b.total) - (a.score / a.total));
 
-  // Podium (top 3)
+  // Sort
+  entries.sort((a, b) => b.percentage - a.percentage);
+
+  // Podium
   const podiumRow = document.getElementById('podiumRow');
   podiumRow.innerHTML = '';
+
   const medals = ['🥇', '🥈', '🥉'];
-  const classes = ['p1', 'p2', 'p3'];
   entries.slice(0, 3).forEach((e, i) => {
     const card = document.createElement('div');
-    card.className = `podium-card ${classes[i]}`;
+    card.className = `podium-card`;
     card.innerHTML = `
       <div class="podium-medal">${medals[i]}</div>
-      <div class="podium-name">${e.username}</div>
+      <div class="podium-name">${e.name}</div>
       <div class="podium-score">${e.score}/${e.total}</div>
       <div class="podium-subject">${e.subject}</div>
     `;
@@ -891,38 +899,18 @@ function renderLeaderboard(filter, btn) {
   // Table
   const tbody = document.getElementById('leaderboardBody');
   tbody.innerHTML = '';
-  if (entries.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem">No scores yet. Take a quiz!</td></tr>`;
-    return;
-  }
 
   entries.forEach((e, i) => {
-    const pct   = Math.round((e.score / e.total) * 100);
-    const rank  = i + 1;
-    const rClass = rank <= 3 ? `r${rank}` : 'rn';
-    const row   = document.createElement('tr');
-    // Highlight current user
-    if (currentUser && e.username === currentUser) {
-      row.style.background = 'rgba(245,158,11,0.05)';
-    }
-    row.innerHTML = `
-      <td><span class="rank-badge ${rClass}">${rank}</span></td>
-      <td>
-        ${e.username}
-        ${currentUser && e.username === currentUser ? '<span style="font-size:.7rem;color:var(--amber);margin-left:.4rem">(you)</span>' : ''}
-      </td>
-      <td>${e.subject}</td>
-      <td style="font-family:var(--font-mono)">${e.score} / ${e.total}</td>
-      <td>
-        <div class="score-bar-wrap">
-          <div class="score-bar-bg">
-            <div class="score-bar-fill" style="width:${pct}%"></div>
-          </div>
-          <span class="score-pct-text">${pct}%</span>
-        </div>
-      </td>
+    const row = `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${e.name}</td>
+        <td>${e.subject}</td>
+        <td>${e.score}/${e.total}</td>
+        <td>${e.percentage}%</td>
+      </tr>
     `;
-    tbody.appendChild(row);
+    tbody.innerHTML += row;
   });
 }
 
