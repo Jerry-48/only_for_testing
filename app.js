@@ -423,7 +423,7 @@ let uploadedNotes = [];
 /* ══════════════════════════════════════════════════════
    AUTH
 ══════════════════════════════════════════════════════ */
-function handleLogin() {
+window.handleLogin = function () {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
   const errorEl = document.getElementById('loginError');
@@ -456,7 +456,7 @@ function handleLogin() {
   });
 }
 
-function handleLogout() {
+window.handleLogout = function () {
   localStorage.removeItem('iq_user');
   currentUser = null;
   document.getElementById('app').classList.add('hidden');
@@ -929,3 +929,9 @@ window.addEventListener('DOMContentLoaded', () => {
     seedLeaderboard(); // seed even before login
   }
 });
+
+//catch ((err) => {
+//console.log(err); // 👈 console ma exact error dekhashe
+//  alert(err.message);
+// return false;
+//});
