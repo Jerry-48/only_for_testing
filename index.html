@@ -54,7 +54,7 @@
         subject: subject,
         score: score,
         total: total,
-        percentage: ((score / total) * 100).toFixed(2)
+        percentage: Math.round((score / total) * 100)
       });
     }
 
