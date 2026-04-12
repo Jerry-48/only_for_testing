@@ -18,7 +18,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBJpDp1_oc1F1fbRr-6g47giWKAUuAWA4Y",
       authDomain: "ict-2nd.firebaseapp.com",
-      databaseURL: "https://ict-2nd-default-rtdb.firebaseio.com/",
+      databaseURL: "https://ict-2nd-default-rtdb.asia-southeast1.firebasedatabase.app/",
       projectId: "ict-2nd",
       storageBucket: "ict-2nd.firebasestorage.app",
       messagingSenderId: "208599414614",
@@ -27,7 +27,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getDatabase(app);
+    const db = getDatabase(app, "https://ict-2nd-default-rtdb.asia-southeast1.firebasedatabase.app");
 
     // LOGIN
     window.firebaseLogin = function (username, password) {
@@ -35,7 +35,7 @@
 
       return signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          localStorage.setItem("user", username);
+          localStorage.setItem("iq_user", username);
           return true;
         })
         .catch((err) => {
@@ -47,7 +47,7 @@
 
     // SAVE SCORE
     window.saveScoreFirebase = function (subject, score, total) {
-      let user = localStorage.getItem("user");
+      let user = localStorage.getItem("iq_user");
 
       push(ref(db, 'scores/'), {
         name: user,
