@@ -1,3 +1,23 @@
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// 🔥 Taro Firebase config (console mathi copy kar)
+const firebaseConfig = {
+      apiKey: "AIzaSyBJpDp1_oc1F1fbRr-6g47giWKAUuAWA4Y",
+      authDomain: "ict-2nd.firebaseapp.com",
+      databaseURL: "https://ict-2nd-default-rtdb.firebaseio.com/",
+      projectId: "ict-2nd",
+      storageBucket: "ict-2nd.firebasestorage.app",
+      messagingSenderId: "208599414614",
+      appId: "1:208599414614:web:4882d0734754d58ebb08f7"
+    };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// 🔴 IMPORTANT (tara error nu solution)
+const database = getDatabase(app, "https://ict-2nd-default-rtdb.asia-southeast1.firebasedatabase.app/");
 /* ═══════════════════════════════════════════════════════
    AcademIQ — app.js
    All site logic: Auth, Notes, Quiz, Leaderboard
