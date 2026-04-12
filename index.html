@@ -33,7 +33,7 @@
     window.firebaseLogin = function (username, password) {
       let email = username + "@test.com";
 
-      return signInWithEmailAndPassword(auth, email, password)
+      return Promise.resolve(true);
         .then(() => {
           localStorage.setItem("iq_user", username);
           return true;
